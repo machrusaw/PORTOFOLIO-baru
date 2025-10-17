@@ -1,6 +1,11 @@
 {
-  "builds": [
-    { "src": "Dockerfile", "use": "@vercel/docker" }
+  "version": 2,
+  "public": true,
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "routes": [
+    { "src": "/build/(.*)", "dest": "/public/build/$1" },
+    { "src": "/(.*)", "dest": "/index.php" }
   ],
   "env": {
     "APP_ENV": "production",
