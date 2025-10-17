@@ -1,31 +1,43 @@
-# Gunakan PHP dengan Apache
+# Gunakan image PHP 8.2 dengan Apache bawaan
 FROM php:8.2-apache
 
-# Install ekstensi yang dibutuhkan Laravel
+# Install ekstensi PHP yang dibutuhkan Laravel
 RUN apt-get update && apt-get install -y \
-    git zip unzip libpng-dev libonig-dev libxml2-dev curl && \
-    docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    git zip unzip libpq-dev libonig-dev libxml2-dev libzip-dev && \
+    docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath opcache
 
-# Install Composer
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+# Aktifkan mod_rewrite Apache
+RUN a2enmod rewrite
+
+# Salin seluruh file proyek ke dalam container
+COPY . /var/www/html
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy semua file ke dalam container
-COPY . .
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php && \
+    mv composer.phar /usr/local/bin/composer
 
-# Install dependensi Laravel
+# Install dependency Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# Jalankan build frontend jika ada Vite
-RUN if [ -f package.json ]; then npm install && npm run build; fi
+# Set permission folder penting
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Beri izin storage dan bootstrap
-RUN chmod -R 775 storage bootstrap/cache
+# Copy konfigurasi Apache (agar public/ jadi root)
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html/public\n\
+    <Directory /var/www/html/public>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Expose port default
-EXPOSE 8080
+# Expose port 80
+EXPOSE 80
 
-# Jalankan Laravel
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
+RUN php artisan config:cache && php artisan route:cache && php artisan migrate --force
+
+# Jalankan Apache
+CMD ["apache2-foreground"]

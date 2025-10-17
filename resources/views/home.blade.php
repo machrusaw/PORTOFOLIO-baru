@@ -142,7 +142,7 @@
         @endforeach
     </div>
 
-    {{-- Project Cards --}}
+        {{-- Project Cards --}}
     <div id="project-list" class="row row-cols-1 row-cols-md-3 g-4">
         @forelse ($projects as $project)
             <div class="col project-card" data-category="{{ $project->category_id }}">
@@ -156,9 +156,7 @@
                         <h5 class="card-title fw-bold">{{ $project->title }}</h5>
                         <p class="card-text text-muted mb-1">{{ $project->category->name ?? 'Tidak ada kategori' }}</p>
                         @if($project->description)
-                            <div class="card-text small text-truncate-description" title="Klik 'View Project' untuk melihat lengkap">
-                                {!! Str::limit($project->description, 100, '...') !!}
-                            </div>
+                            <p class="card-text small text-truncate" title="{{ $project->description }}">{{ $project->description }}</p>
                         @endif
                     </div>
                     <div class="card-footer bg-white border-0 d-flex justify-content-center mt-auto">
@@ -174,6 +172,7 @@
     <div id="no-project-msg" class="text-center text-muted mt-4 d-none">
         Belum ada project pada kategori ini
     </div>
+</div>
 
     {{-- View All Button --}}
     <div class="text-center mt-5">
